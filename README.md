@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # 🏏 Sports Hub, Purnea — Frontend
 
 A professional, modern **frontend-only e-commerce store** for a sports goods store in
@@ -117,3 +118,7 @@ React Query/SWR. Online payments (Razorpay), image uploads (Multer) and SMTP
 password reset can then replace the simulated equivalents.
 
 © Sports Hub, Purnea
+=======
+# sports_hub
+E-commerce website for sports items 
+>>>>>>> 24e8697285ed5cd55ea513250ed68c8d8b101f6a
