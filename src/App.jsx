@@ -1,5 +1,6 @@
-import React, { lazy } from 'react'
+import React, { lazy, Suspense } from 'react'
 import { BrowserRouter, Routes, Route } from 'react-router-dom'
+import { InlinePageLoader } from './components/ui/Async'
 import { AuthProvider, CartProvider, SettingsProvider } from './context/AppContext'
 import { ConfirmProvider } from './components/ui/ConfirmDialog'
 import ErrorBoundary from './components/ErrorBoundary'
@@ -37,33 +38,35 @@ export default function App() {
           <SettingsProvider>
             <CartProvider>
               <ConfirmProvider>
-                <Routes>
-                  <Route path="/login" element={<Login />} />
-                  <Route element={<Layout />}>
-                    <Route path="/" element={<Home />} />
-                    <Route path="/shop" element={<Shop />} />
-                    <Route path="/product/:slug" element={<ProductDetail />} />
-                    <Route path="/customize" element={<Customize />} />
-                    <Route path="/cart" element={<Cart />} />
-                    <Route path="/checkout" element={<Checkout />} />
-                    <Route path="/order/:no" element={<OrderConfirmed />} />
-                    <Route path="/account" element={<Account />} />
-                    <Route path="/dashboard" element={<UserDashboard />} />
-                    <Route path="/contact" element={<Contact />} />
-                    <Route path="/about" element={<About />} />
-                    <Route path="/404" element={<NotFound />} />
-                    <Route path="*" element={<NotFound />} />
-                  </Route>
-                  <Route path="/admin" element={<AdminLayout />}>
-                    <Route index element={<Dashboard />} />
-                    <Route path="products" element={<AdminProducts />} />
-                    <Route path="orders" element={<AdminOrders />} />
-                    <Route path="custom" element={<AdminCustomOrders />} />
-                    <Route path="users" element={<AdminUsers />} />
-                    <Route path="messages" element={<AdminMessages />} />
-                    <Route path="settings" element={<AdminSettings />} />
-                  </Route>
-                </Routes>
+                <Suspense fallback={<InlinePageLoader />}>
+                  <Routes>
+                    <Route path="/login" element={<Login />} />
+                    <Route element={<Layout />}>
+                      <Route path="/" element={<Home />} />
+                      <Route path="/shop" element={<Shop />} />
+                      <Route path="/product/:slug" element={<ProductDetail />} />
+                      <Route path="/customize" element={<Customize />} />
+                      <Route path="/cart" element={<Cart />} />
+                      <Route path="/checkout" element={<Checkout />} />
+                      <Route path="/order/:no" element={<OrderConfirmed />} />
+                      <Route path="/account" element={<Account />} />
+                      <Route path="/dashboard" element={<UserDashboard />} />
+                      <Route path="/contact" element={<Contact />} />
+                      <Route path="/about" element={<About />} />
+                      <Route path="/404" element={<NotFound />} />
+                      <Route path="*" element={<NotFound />} />
+                    </Route>
+                    <Route path="/admin" element={<AdminLayout />}>
+                      <Route index element={<Dashboard />} />
+                      <Route path="products" element={<AdminProducts />} />
+                      <Route path="orders" element={<AdminOrders />} />
+                      <Route path="custom" element={<AdminCustomOrders />} />
+                      <Route path="users" element={<AdminUsers />} />
+                      <Route path="messages" element={<AdminMessages />} />
+                      <Route path="settings" element={<AdminSettings />} />
+                    </Route>
+                  </Routes>
+                </Suspense>
               </ConfirmProvider>
             </CartProvider>
           </SettingsProvider>

@@ -38,15 +38,13 @@ export function AuthProvider({ children }) {
     boot()
   }, [])
 
-  const login = useCallback(async (credentials) => {
-    const res = await authApi.login(credentials)
-    setSession({ token: res.token })
-    setUser(res.user)
-    return res.user
+  const sendOtp = useCallback(async (phone) => {
+    const res = await authApi.sendOtp({ phone })
+    return res
   }, [])
 
-  const register = useCallback(async (payload) => {
-    const res = await authApi.register(payload)
+  const verifyOtp = useCallback(async ({ phone, code, name }) => {
+    const res = await authApi.verifyOtp({ phone, code, name })
     setSession({ token: res.token })
     setUser(res.user)
     return res.user
@@ -69,8 +67,8 @@ export function AuthProvider({ children }) {
   )
 
   const value = useMemo(
-    () => ({ user, session, loading, login, register, logout, updateProfile }),
-    [user, session, loading, login, register, logout, updateProfile],
+    () => ({ user, session, loading, sendOtp, verifyOtp, logout, updateProfile }),
+    [user, session, loading, sendOtp, verifyOtp, logout, updateProfile],
   )
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>
@@ -130,7 +128,7 @@ export function CartProvider({ children }) {
                 cartKey: key,
                 productId: p.id,
                 name: p.name,
-                price,
+                price: p.price,
                 mrp: p.mrp,
                 qty,
                 size: size || null,

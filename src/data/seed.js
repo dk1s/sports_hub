@@ -3,8 +3,8 @@ import { uid } from '../utils/format'
 export const storeDefaults = {
   name: 'Sports Hub, Purnea',
   tagline: 'Gear Up. Play Hard. Win Big.',
-  phone: '+91 90000 00000',
-  whatsapp: '919000000000',
+  phone: '+91 82102 93271',
+  whatsapp: '918210293271',
   email: 'hello@sportshubpurnea.com',
   address: 'Shop No. 4, MG Road, Near Clock Tower, Purnea, Bihar — 854301',
   mapEmbed:
@@ -100,6 +100,7 @@ export const seedUsers = [
     passwordHash: '$2b$10$Q4RzHwAbeRWCt9yWv/OmaO8lVLRW1EQXKvfRqK9uZQzrUhcRb3hK.',
     role: 'admin',
     blocked: false,
+    phone: '+91 70000 00001',
     createdAt: daysAgo(120),
   },
   {

@@ -1,17 +1,26 @@
 import React from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import { FaArrowRight, FaTshirt, FaBolt, FaShieldAlt, FaStar } from 'react-icons/fa'
 import ProductImage from '../ui/ProductImage'
 import { Stars, StockBadge } from '../ui/misc'
 import { inr } from '../../utils/format'
-import { useCart, useSettingsStore } from '../../context/AppContext'
+import { useCart, useSettingsStore, useAuth } from '../../context/AppContext'
 import { useGetCatalogQuery } from '../../services/apiSlice'
 
 function ShowcaseCard() {
   const { add } = useCart()
+  const { user } = useAuth()
+  const navigate = useNavigate()
   const { data: catalog = [] } = useGetCatalogQuery()
   const product = catalog.find((p) => p.featured) || catalog[0] || null
   if (!product) return null
+  const onAdd = () => {
+    if (!user) {
+      const next = `/product/${product.slug}?intent=addToCart&intentQty=1`
+      return navigate('/login?next=' + encodeURIComponent(next))
+    }
+    add(product.id)
+  }
   return (
     <div className="relative w-full max-w-sm">
       <div className="absolute -inset-6 rounded-[2.5rem] bg-accent/20 blur-3xl" />
@@ -33,7 +42,7 @@ function ShowcaseCard() {
               <span className="font-display text-xl font-bold text-brand-900">{inr(product.price)}</span>
               <span className="ml-2 text-sm text-ink/40 line-through">{inr(product.mrp)}</span>
             </div>
-            <button onClick={() => add(product.id)} className="btn-primary px-4 py-2 text-xs">
+            <button onClick={onAdd} className="btn-primary px-4 py-2 text-xs">
               Add to Cart
             </button>
           </div>

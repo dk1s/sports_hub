@@ -21,6 +21,7 @@ const KEYS = {
   addresses: 'sh:addresses',
   wishlist: 'sh:wishlist',
   coupons: 'sh:coupons',
+  otps: 'sh:otps',
 }
 
 const read = (key, fallback) => {
@@ -36,10 +37,10 @@ const write = (key, value) => localStorage.setItem(key, JSON.stringify(value))
 /* ---------------- seeding ---------------- */
 const ensureSeed = () => {
   if (!localStorage.getItem(KEYS.users)) {
-    const users = { ...seedUsers }
-    users[0].passwordHash = bcrypt.hashSync('admin123', 10)
-    users[1].passwordHash = bcrypt.hashSync('customer123', 10)
-    users[2].passwordHash = bcrypt.hashSync('customer123', 10)
+    const users = Object.fromEntries(seedUsers.map((u) => [u._id, u]))
+    users.u_admin.passwordHash = bcrypt.hashSync('admin123', 10)
+    users.u_customer.passwordHash = bcrypt.hashSync('customer123', 10)
+    users.u_arjun.passwordHash = bcrypt.hashSync('customer123', 10)
     write(KEYS.users, users)
     write(KEYS.orders, seedOrders)
     write(KEYS.custom, seedCustomOrders)
@@ -48,6 +49,12 @@ const ensureSeed = () => {
     write(KEYS.addresses, seedAddresses)
     write(KEYS.wishlist, {})
     write(KEYS.coupons, coupons)
+    write(KEYS.otps, {})
+  }
+
+  const settings = read(KEYS.settings, null)
+  if (settings && (settings.whatsapp === '919000000000' || settings.phone === '+91 90000 00000')) {
+    write(KEYS.settings, { ...settings, phone: '+91 82102 93271', whatsapp: '918210293271' })
   }
 }
 
@@ -112,37 +119,68 @@ const publicUser = ({ _id, name, email, role, phone, blocked, createdAt }) => ({
   _id, name, email, role, phone, blocked, createdAt,
 })
 
-/* ---------------- auth ---------------- */
+/* ---------------- auth (phone + OTP) ----------------
+   There is no SMS gateway in this demo, so `sendOtp` returns the code
+   (`demoCode`) and the UI shows it to the user. Any phone that is not in
+   the user list automatically creates a customer account on verify. */
+const digitsOf = (p) => String(p || '').replace(/\D/g, '')
+export const normalizePhone = (p) => {
+  let d = digitsOf(p)
+  if (d.length === 11 && d.startsWith('0')) d = '91' + d.slice(1)
+  return d
+}
+export const formatPhone = (p) => {
+  const d = normalizePhone(p)
+  return d.length === 12 && d.startsWith('91') ? `+91 ${d.slice(2, 7)} ${d.slice(7)}` : `+${d}`
+}
+
+const OTP_TTL = 5 * 60 * 1000 // 5 minutes
+const OTP_COOLDOWN = 30 * 1000 // 30s between sends
+
 export const authApi = {
-  login: after(async ({ email, password }) => {
+  sendOtp: after(async ({ phone }) => {
+    const digits = normalizePhone(phone)
+    if (digits.length < 10 || digits.length > 13) throw new Error('Please enter a valid phone number.')
     const users = read(KEYS.users, {})
-    const user = Object.values(users).find((u) => u.email.toLowerCase() === (email || '').trim().toLowerCase())
-    if (!user || user.blocked) throw new Error(user?.blocked ? 'This account has been blocked. Contact support.' : 'Invalid email or password.')
-    const ok = bcrypt.compareSync(password || '', user.passwordHash)
-    if (!ok) throw new Error('Invalid email or password.')
-    const token = `sh_${user._id}_${Date.now().toString(36)}`
-    setSession({ token, user: publicUser(user) })
-    invalidateAll()
-    return { token, user: publicUser(user) }
+    const existing = Object.values(users).some((u) => normalizePhone(u.phone) === digits)
+    const otps = read(KEYS.otps, {})
+    const now = Date.now()
+    const prev = otps[digits]
+    if (prev && now < prev.expiresAt && now - prev.sentAt < OTP_COOLDOWN)
+      throw new Error(`Please wait ${Math.ceil((OTP_COOLDOWN - (now - prev.sentAt)) / 1000)}s before requesting another OTP.`)
+    const code = String(Math.floor(100000 + Math.random() * 900000))
+    otps[digits] = { code, sentAt: now, expiresAt: now + OTP_TTL }
+    write(KEYS.otps, otps)
+    return { phone: formatPhone(digits), demoCode: code, isNew: !existing }
   }),
-  register: after(async ({ name, email, password, phone }) => {
-    const users = read(KEYS.users, {})
-    if (!name || !email || !password) throw new Error('Please fill all required fields.')
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
-    if (!emailRegex.test(email)) throw new Error('Please enter a valid email address.')
-    if (password.length < 6) throw new Error('Password must be at least 6 characters.')
-    if (Object.values(users).some((u) => u.email.toLowerCase() === email.toLowerCase()))
-      throw new Error('An account with this email already exists.')
-    const user = {
-      _id: uid('u'),
-      name, email: email.trim(), phone: phone || '',
-      passwordHash: bcrypt.hashSync(password, 10),
-      role: 'customer',
-      blocked: false,
-      createdAt: new Date().toISOString(),
+  verifyOtp: after(async ({ phone, code, name }) => {
+    const digits = normalizePhone(phone)
+    const otps = read(KEYS.otps, {})
+    const rec = otps[digits]
+    if (!rec) throw new Error('No OTP was sent to this number. Request one first.')
+    if (Date.now() > rec.expiresAt) {
+      delete otps[digits]
+      write(KEYS.otps, otps)
+      throw new Error('This OTP has expired. Request a new one.')
     }
-    users[user._id] = user
-    write(KEYS.users, users)
+    if (String(rec.code) !== String(code || '').trim()) throw new Error('Incorrect OTP. Please check and try again.')
+    delete otps[digits]
+    write(KEYS.otps, otps)
+    const users = read(KEYS.users, {})
+    let user = Object.values(users).find((u) => normalizePhone(u.phone) === digits)
+    if (!user) {
+      user = {
+        _id: uid('u'),
+        name: (name || '').trim() || `Shopper ${digits.slice(-4)}`,
+        email: `${digits}@otp.sportshub.local`,
+        phone: formatPhone(digits),
+        role: 'customer',
+        blocked: false,
+        createdAt: new Date().toISOString(),
+      }
+      users[user._id] = user
+      write(KEYS.users, users)
+    }
     const token = `sh_${user._id}_${Date.now().toString(36)}`
     setSession({ token, user: publicUser(user) })
     invalidateAll()
@@ -182,6 +220,7 @@ export const usersApi = {
     if (!s) throw new Error('Not signed in.')
     const users = read(KEYS.users, {})
     const u = users[s.user._id]
+    if (!u.passwordHash) throw new Error('Password login is disabled for this account — use phone OTP to sign in.')
     if (!bcrypt.compareSync(current || '', u.passwordHash)) throw new Error('Current password is incorrect.')
     if (!next || next.length < 6) throw new Error('New password must be at least 6 characters.')
     u.passwordHash = bcrypt.hashSync(next, 10)
@@ -498,7 +537,7 @@ const assertAdmin = () => {
 }
 
 export const adminSeedReset = () => {
-  ;['users', 'session', 'orders', 'custom', 'messages', 'settings', 'addresses', 'wishlist', 'coupons'].forEach((k) =>
+  ;['users', 'session', 'orders', 'custom', 'messages', 'settings', 'addresses', 'wishlist', 'coupons', 'otps'].forEach((k) =>
     localStorage.removeItem(KEYS[k]),
   )
   invalidateAll()

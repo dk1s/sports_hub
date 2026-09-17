@@ -45,10 +45,10 @@ export default function Header() {
         <div className="container-x flex items-center justify-between py-1.5">
           <div className="flex items-center gap-4">
             <span className="inline-flex items-center gap-1.5">
-              <FaPhoneAlt className="text-accent" /> {settings?.phone || '+91 90000 00000'}
+              <FaPhoneAlt className="text-accent" /> {settings?.phone || '+91 82102 93271'}
             </span>
             <a
-              href={`https://wa.me/${settings?.whatsapp || '919000000000'}`}
+              href={`https://wa.me/${settings?.whatsapp || '918210293271'}`}
               target="_blank"
               rel="noopener noreferrer"
               className="inline-flex items-center gap-1 text-emerald-400 hover:text-emerald-300"
@@ -168,13 +168,14 @@ export default function Header() {
                   <>
                     <p className="text-xs text-ink/50">Signed in as <b className="text-ink/80">{user.email}</b></p>
                     <Link to="/account" className="btn-primary w-full text-sm py-2.5">My Account</Link>
+                    {user.role === 'admin' && <Link to="/admin" className="btn-outline w-full text-sm py-2.5"><FaCog className="inline" /> Admin Panel</Link>}
                     <button onClick={logout} className="btn-outline w-full text-sm py-2.5">Sign Out</button>
                   </>
                 ) : (
                   <Link to="/login" className="btn-primary w-full text-sm py-2.5">Sign In / Register</Link>
                 )}
                 <a
-                  href={`https://wa.me/${settings?.whatsapp || '919000000000'}`}
+                  href={`https://wa.me/${settings?.whatsapp || '918210293271'}`}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="btn w-full border border-emerald-500 bg-emerald-500 text-sm py-2.5 text-white hover:bg-emerald-600"

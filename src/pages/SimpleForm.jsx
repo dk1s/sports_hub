@@ -250,7 +250,7 @@ export default function SimpleForm({ initialDesign = null }) {
       </form>
 
       <div>
-        <div className="card sticky top-40 overflow-hidden">
+        <div className="card lg:sticky lg:top-40 overflow-hidden">
           <div className="bg-brand-950 p-6 text-center">
             <div className="mx-auto max-w-[240px]">
               <svg viewBox="0 0 320 320" className="w-full">

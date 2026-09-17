@@ -1,5 +1,5 @@
-import React, { useEffect, useMemo, useState } from 'react'
-import { Link, useNavigate, useParams } from 'react-router-dom'
+import React, { useEffect, useMemo, useRef, useState } from 'react'
+import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import { FaHeart, FaRegHeart, FaCartPlus, FaBolt, FaCheck, FaTruck, FaShieldAlt, FaInfoCircle } from 'react-icons/fa'
 import toast from 'react-hot-toast'
 import ProductImage from '../components/ui/ProductImage'
@@ -23,6 +23,11 @@ export default function ProductDetail() {
   const { user } = useAuth()
   const { settings } = useSettingsStore()
   const nav = useNavigate()
+  const [searchParams] = useSearchParams()
+  const intent = searchParams.get('intent') // addToCart | buyNow
+  const intentQty = Number(searchParams.get('intentQty') || 1)
+  const intentSize = searchParams.get('intentSize') || ''
+  const intentHandledRef = useRef('')
   const [qty, setQty] = useState(1)
   const [size, setSize] = useState('')
   const [variant, setVariant] = useState(0)
@@ -43,6 +48,36 @@ export default function ProductDetail() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [slug])
 
+  /* Resolve an Add to Cart / Buy Now / Wishlist intent started before login */
+  useEffect(() => {
+    if (!user || !product) return
+    if (intent === 'addToCart' || intent === 'buyNow') {
+      if (intentHandledRef.current === intent) return
+      intentHandledRef.current = intent
+      const s = intentSize || product.sizes?.[0] || ''
+      const q = Math.max(1, intentQty || 1)
+      if (product.sizes?.length && s && !product.sizes.includes(s)) return
+      add(product.id, { qty: q, size: product.sizes?.length ? s || undefined : undefined })
+      toast.success('Added to cart')
+      if (intent === 'buyNow') {
+        setTimeout(() => nav('/checkout'), 400)
+      } else {
+        nav(`/product/${product.slug}`, { replace: true })
+      }
+    } else if (intent === 'addToWishlist') {
+      if (intentHandledRef.current === 'addToWishlist') return
+      intentHandledRef.current = 'addToWishlist'
+      toggleWishlist({ productId: product.id, uid })
+        .unwrap()
+        .then((items) => {
+          toast.success(items.includes(product.id) ? 'Saved to wishlist' : 'Removed from wishlist')
+          nav(`/product/${product.slug}`, { replace: true })
+        })
+        .catch(() => {})
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user, product, intent])
+
   if (!catalog.length) return <div className="container-x flex justify-center py-24"><Spinner /></div>
 
   if (!product) {
@@ -61,18 +96,25 @@ export default function ProductDetail() {
   const bigger = size && sizeChart[size]
 
   const toggleWish = async () => {
-    if (!user) return nav('/login?next=' + encodeURIComponent(`/product/${product.slug}`))
+    if (!user) return nav('/login?next=' + encodeURIComponent(`/product/${product.slug}?intent=addToWishlist`))
     const added = (await toggleWishlist({ productId: product.id, uid }).unwrap()).includes(product.id)
     toast.success(added ? 'Saved to wishlist' : 'Removed from wishlist')
   }
 
+  const loginForIntent = (which) => {
+    const params = new URLSearchParams({ intent: which, intentQty: String(qty), intentSize: size || '' })
+    nav('/login?next=' + encodeURIComponent(`/product/${product.slug}?${params.toString()}`))
+  }
+
   const doAdd = () => {
     if (product.sizes?.length && !size) return toast.error('Please select a size.')
+    if (!user) return loginForIntent('addToCart')
     add(product.id, { qty, size })
   }
 
   const buyNow = () => {
     if (product.sizes?.length && !size) return toast.error('Please select a size.')
+    if (!user) return loginForIntent('buyNow')
     add(product.id, { qty, size })
     setTimeout(() => nav('/checkout'), 350)
   }

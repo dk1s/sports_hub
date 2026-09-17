@@ -49,7 +49,7 @@ export default function Footer() {
             <a href={settings?.facebook} target="_blank" rel="noopener noreferrer" aria-label="Facebook" className="flex h-9 w-9 items-center justify-center rounded-full bg-white/10 hover:bg-accent transition">
               <FaFacebookF />
             </a>
-            <a href={`https://wa.me/${settings?.whatsapp || '919000000000'}`} target="_blank" rel="noopener noreferrer" aria-label="WhatsApp" className="flex h-9 w-9 items-center justify-center rounded-full bg-emerald-500/20 text-emerald-400 hover:bg-emerald-500 hover:text-white transition">
+            <a href={`https://wa.me/${settings?.whatsapp || '918210293271'}`} target="_blank" rel="noopener noreferrer" aria-label="WhatsApp" className="flex h-9 w-9 items-center justify-center rounded-full bg-emerald-500/20 text-emerald-400 hover:bg-emerald-500 hover:text-white transition">
               <FaWhatsapp />
             </a>
           </div>
@@ -89,7 +89,7 @@ export default function Footer() {
             <li className="flex gap-2.5"><FaClock className="mt-0.5 shrink-0 text-accent" /> {settings?.timings}</li>
           </ul>
           <a
-            href={`https://wa.me/${settings?.whatsapp || '919000000000'}?text=Hi Sports Hub, I have a question.`}
+            href={`https://wa.me/${settings?.whatsapp || '918210293271'}?text=Hi Sports Hub, I have a question.`}
             target="_blank"
             rel="noopener noreferrer"
             className="btn mt-5 w-full bg-emerald-500 py-2.5 text-sm text-white hover:bg-emerald-600"

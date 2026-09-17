@@ -23,13 +23,17 @@ export default function ProductCard({ product, compact = false }) {
       toast('Choose a size first', { icon: '📏' })
       return
     }
+    if (!user) {
+      const next = `/product/${product.slug}?intent=addToCart&intentQty=1`
+      return navigate('/login?next=' + encodeURIComponent(next))
+    }
     add(product.id)
   }
 
   const toggleWish = async (e) => {
     e.preventDefault()
     e.stopPropagation()
-    if (!user) return navigate('/login?next=' + encodeURIComponent(`/product/${product.slug}`))
+    if (!user) return navigate('/login?next=' + encodeURIComponent(`/product/${product.slug}?intent=addToWishlist`))
     try {
       await wishlistApi.toggle({ productId: product.id })
       setLoved((v) => !v)

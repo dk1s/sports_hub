@@ -1,7 +1,7 @@
 import React, { Suspense, useEffect, useState } from 'react'
 import { Link, NavLink, Outlet, useNavigate } from 'react-router-dom'
 import {
-  FaTachometerAlt, FaBoxOpen, FaShoppingBag, FaTshirt, FaUsers, FaEnvelopeOpen, FaCog, FaStore, FaBars, FaTimes, FaSignOutAlt, FaShieldAlt, FaBan
+  FaTachometerAlt, FaBoxOpen, FaShoppingBag, FaTshirt, FaUsers, FaEnvelopeOpen, FaCog, FaStore, FaBars, FaTimes, FaSignOutAlt, FaShieldAlt, FaBan, FaUserCircle
 } from 'react-icons/fa'
 import { Toaster } from 'react-hot-toast'
 import { useAuth, toastOpts } from '../context/AppContext'
@@ -116,8 +116,11 @@ export default function AdminLayout() {
       </nav>
 
       <div className="space-y-1 border-t border-white/10 p-3">
-        <Link to="/" className="flex items-center gap-3 rounded-xl px-4 py-2.5 text-sm font-semibold text-white/70 hover:bg-white/10 hover:text-white">
-          <FaStore /> View Storefront
+        <Link
+          to="/dashboard"
+          className="flex items-center gap-3 rounded-xl bg-gradient-to-r from-accent/25 to-accent/10 px-4 py-2.5 text-sm font-bold text-accent ring-1 ring-accent/30 transition hover:from-accent hover:to-accent-600 hover:text-white"
+        >
+          <FaUserCircle /> Customer Portal <span className="ml-auto text-xs opacity-70">↗</span>
         </Link>
         <button onClick={logout} className="flex w-full items-center gap-3 rounded-xl px-4 py-2.5 text-sm font-semibold text-red-300 hover:bg-red-500/20">
           <FaSignOutAlt /> Sign out

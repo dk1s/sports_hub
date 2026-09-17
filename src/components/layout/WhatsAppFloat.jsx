@@ -6,7 +6,7 @@ export default function WhatsAppFloat() {
   const { settings } = useSettingsStore()
   return (
     <a
-      href={`https://wa.me/${settings?.whatsapp || '919000000000'}?text=Hi Sports Hub, I need help with an order.`}
+      href={`https://wa.me/${settings?.whatsapp || '918210293271'}?text=Hi Sports Hub, I need help with an order.`}
       target="_blank"
       rel="noopener noreferrer"
       aria-label="Chat on WhatsApp"

@@ -1,11 +1,11 @@
 import React, { useState } from 'react'
 import { Link, Navigate, useSearchParams } from 'react-router-dom'
 import {
-  FaBox, FaTshirt, FaUserCog, FaHeart, FaMapMarkerAlt, FaSignOutAlt, FaEye, FaTrash, FaPlus, FaCheck, FaExclamationCircle
+  FaBox, FaTshirt, FaUserCog, FaHeart, FaMapMarkerAlt, FaSignOutAlt, FaEye, FaTrash, FaPlus, FaCheck, FaMobileAlt
 } from 'react-icons/fa'
 import toast from 'react-hot-toast'
 import { useAuth } from '../context/AppContext'
-import { usersApi, customStatusFlow } from '../services/api'
+import { customStatusFlow } from '../services/api'
 import {
   useGetOrdersMineQuery,
   useGetCustomMineQuery,
@@ -386,9 +386,7 @@ function AddressBook({ addresses, uid }) {
 function ProfileCard({ user, updateProfile }) {
   const [name, setName] = useState(user.name)
   const [phone, setPhone] = useState(user.phone || '')
-  const [pw, setPw] = useState({ current: '', next: '' })
   const [busy, setBusy] = useState(false)
-  const [pwBusy, setPwBusy] = useState(false)
 
   const saveProfile = async () => {
     if (!name.trim()) return toast.error('Name cannot be empty.')
@@ -400,20 +398,6 @@ function ProfileCard({ user, updateProfile }) {
       toast.error(e.message)
     } finally {
       setBusy(false)
-    }
-  }
-
-  const changePw = async () => {
-    if (pw.next.length < 6) return toast.error('New password must be at least 6 characters.')
-    setPwBusy(true)
-    try {
-      await usersApi.changePassword(pw)
-      setPw({ current: '', next: '' })
-      toast.success('Password changed')
-    } catch (e) {
-      toast.error(e.message)
-    } finally {
-      setPwBusy(false)
     }
   }
 
@@ -431,13 +415,15 @@ function ProfileCard({ user, updateProfile }) {
 
       <div className="card p-6">
         <h2 className="flex items-center gap-2 font-display text-lg font-bold text-brand-900">
-          <FaExclamationCircle className="text-amber-500" /> Change password
+          <FaMobileAlt className="text-brand-700" /> Sign-in method
         </h2>
-        <div className="mt-4 grid gap-4 sm:grid-cols-2">
-          <div><label className="field-label">Current password</label><input type="password" value={pw.current} onChange={(e) => setPw({ ...pw, current: e.target.value })} className="field" /></div>
-          <div><label className="field-label">New password</label><input type="password" value={pw.next} onChange={(e) => setPw({ ...pw, next: e.target.value })} className="field" /></div>
+        <div className="mt-3 flex flex-wrap items-center gap-2 rounded-xl bg-brand-50 px-4 py-3 text-sm text-brand-900">
+          <span className="chip bg-brand-700 text-white">Phone + OTP</span>
+          <span>You sign in with your number {user.phone ? <b>{user.phone}</b> : ''} — no password needed.</span>
         </div>
-        <button onClick={changePw} disabled={pwBusy} className="btn-dark mt-4 text-sm">{pwBusy ? 'Updating…' : 'Update password'}</button>
+        <p className="mt-3 text-xs text-ink/50">
+          To use a different number, just sign out and log in again with the new one — it gets linked to a fresh account automatically.
+        </p>
       </div>
     </section>
   )

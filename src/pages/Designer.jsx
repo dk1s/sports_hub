@@ -2,24 +2,24 @@ import React, { useEffect, useRef, useState, useCallback } from 'react'
 import { Link } from 'react-router-dom'
 import { fabric } from 'fabric'
 import toast from 'react-hot-toast'
-import { FaImage, FaFont, FaTrash, FaPlus, FaLayerGroup, FaArrowsAlt } from 'react-icons/fa'
+import { FaImage, FaFont, FaTrash, FaPlus, FaLayerGroup, FaArrowsAlt, FaRobot, FaMagic, FaSpinner, FaEye } from 'react-icons/fa'
 import { useCart } from '../context/AppContext'
 import { inr } from '../utils/format'
 
-/* ---------- garment template paths ---------- */
-export const garmentPaths = {
-  front:
-    'M250 56 L168 44 L112 82 L120 148 L170 140 L170 442 L330 442 L330 140 L380 148 L388 82 L332 44 Z',
-  back:
-    'M250 38 L160 46 L112 84 L388 84 L340 46 Z ' +
-    'M112 84 L120 148 L168 140 L168 442 L332 442 L332 140 L380 148 L388 84 Z',
-}
+/* ---------- product template paths (500×500 template) ---------- */
+const tshirtFront = 'M250 56 L168 44 L112 82 L120 148 L170 140 L170 442 L330 442 L330 140 L380 148 L388 82 L332 44 Z'
+const tshirtBack = 'M250 38 L160 46 L112 84 L388 84 L340 46 Z M112 84 L120 148 L168 140 L168 442 L332 442 L332 140 L380 148 L388 84 Z'
 
 export const garmentTypes = [
-  { id: 'Round-Neck T-Shirt', label: 'Round-Neck T-Shirt', price: 449, fabric: 'Combed Cotton 180 GSM' },
-  { id: 'Polo T-Shirt', label: 'Polo T-Shirt', price: 599, fabric: 'Pique Cotton' },
-  { id: 'Team Jersey (Sublimated)', label: 'Team Jersey (Sublimated)', price: 649, fabric: 'Sublimation Mesh' },
-  { id: 'Pro Player Jersey', label: 'Pro Player Jersey', price: 799, fabric: 'Dry-Fit Micro Mesh' },
+  { id: 'Round-Neck T-Shirt', label: 'Round-Neck T-Shirt', price: 449, fabric: 'Combed Cotton 180 GSM', paths: { front: tshirtFront, back: tshirtBack } },
+  { id: 'Polo T-Shirt', label: 'Polo T-Shirt', price: 599, fabric: 'Pique Cotton', paths: { front: 'M250 46 L176 40 L116 78 L124 146 L170 138 L170 442 L330 442 L330 138 L376 146 L384 78 L324 40 Z', back: 'M250 30 L162 40 L116 82 L384 82 L338 40 Z M116 82 L124 146 L170 138 L170 442 L332 442 L332 138 L376 146 L384 82 Z' } },
+  { id: 'Team Jersey (Sublimated)', label: 'Team Jersey (Sublimated)', price: 649, fabric: 'Sublimation Mesh', paths: { front: tshirtFront, back: tshirtBack } },
+  { id: 'Pro Player Jersey', label: 'Pro Player Jersey', price: 799, fabric: 'Dry-Fit Micro Mesh', paths: { front: tshirtFront, back: tshirtBack } },
+  { id: 'Track Lower', label: 'Track Lower', price: 599, fabric: 'Rapid-Dry Fabric', paths: { front: 'M250 74 C238 74 196 82 166 108 L144 168 L112 158 L92 436 L156 436 L184 300 C196 292 228 288 250 288 Z M250 74 C262 74 304 82 334 108 L356 168 L388 158 L408 436 L344 436 L316 300 C304 292 272 288 250 288 Z', back: 'M250 74 C238 74 196 82 166 108 L144 168 L112 158 L92 436 L156 436 L184 300 C196 292 228 288 250 288 Z M250 74 C262 74 304 82 334 108 L356 168 L388 158 L408 436 L344 436 L316 300 C304 292 272 288 250 288 Z' } },
+  { id: 'Batting Gloves', label: 'Batting Gloves', price: 899, fabric: 'PP + Leather Palm', paths: { front: 'M168 108 C128 120 116 170 122 224 L116 300 C118 328 138 348 166 348 L208 342 L220 254 L228 176 C228 134 208 100 168 108 Z M332 108 C372 120 384 170 378 224 L384 300 C382 328 362 348 334 348 L292 342 L280 254 L272 176 C272 134 292 100 332 108 Z', back: 'M168 108 C128 120 116 170 122 224 L116 300 C118 328 138 348 166 348 L208 342 L220 254 L228 176 C228 134 208 100 168 108 Z M332 108 C372 120 384 170 378 224 L384 300 C382 328 362 348 334 348 L292 342 L280 254 L272 176 C272 134 292 100 332 108 Z' } },
+  { id: 'Cricket Cap', label: 'Cricket Cap', price: 399, fabric: 'Polyester', paths: { front: 'M250 106 C176 106 136 154 128 220 L128 248 L372 248 L372 220 C364 154 324 106 250 106 Z M128 248 C110 254 98 270 102 292 C110 322 152 334 250 334 C348 334 390 322 398 292 C402 270 390 254 372 248 Z', back: 'M250 106 C176 106 136 154 128 220 L128 300 L372 300 L372 220 C364 154 324 106 250 106 Z M128 300 L128 344 L372 344 L372 300 Z' } },
+  { id: 'Batting Helmet', label: 'Batting Helmet', price: 1499, fabric: 'ABS + Steel Grill', paths: { front: 'M250 96 C170 96 130 148 122 226 L122 256 L378 256 L378 226 C370 148 330 96 250 96 Z M122 210 L96 300 C92 332 118 352 150 342 L170 316 L180 238 Z M378 210 L404 300 C408 332 382 352 350 342 L330 316 L320 238 Z', back: 'M250 96 C170 96 130 148 122 226 L118 320 C116 356 250 386 250 386 C250 386 384 356 382 320 L378 226 C370 148 330 96 250 96 Z' } },
+  { id: 'Cricket Bat', label: 'Cricket Bat', price: 1999, fabric: 'Grade-A Willow', paths: { front: 'M250 502 C304 502 310 496 310 468 L310 300 C310 210 300 180 286 162 L292 98 C292 80 278 66 250 66 C222 66 208 80 208 98 L214 162 C200 180 190 210 190 300 L190 468 C190 496 196 502 250 502 Z', back: 'M250 502 C304 502 310 496 310 468 L310 300 C310 210 300 180 286 162 L292 98 C292 80 278 66 250 66 C222 66 208 80 208 98 L214 162 C200 180 190 210 190 300 L190 468 C190 496 196 502 250 502 Z' } },
 ]
 
 export const shirtColors = [
@@ -28,6 +28,17 @@ export const shirtColors = [
 ]
 
 const fonts = ['Arial', 'Verdana', 'Georgia', 'Impact', "'Courier New'", "'Times New Roman'", 'Trebuchet MS']
+
+const aiChips = ['Lion mascot', 'Eagle wings', 'Thunderbolt + lightning', 'Flame striker', 'Crown royal']
+
+const fullIdeas = [
+  { label: 'Eagle jersey', prompt: 'navy blue cricket jersey with a golden eagle chest print and white sleeves' },
+  { label: 'Lion football kit', prompt: 'red and black football kit with a roaring lion crest on the chest' },
+  { label: 'Thunder basketball', prompt: 'neon green basketball jersey with a yellow thunderbolt and big number' },
+  { label: 'Crown polo', prompt: 'white and gold polo with a minimal crown logo on the chest' },
+  { label: 'Flame cricket kit', prompt: 'black cricket kit with orange flame graphics and a dragon emblem' },
+  { label: 'Tiger lower', prompt: 'royal blue track lower with white side stripes and a tiger logo' },
+]
 
 const palettes = ['#101828', '#FFFFFF', '#FF6B2C', '#D9F044', '#1E805F', '#E11D48', '#1E3A8A']
 
@@ -53,6 +64,17 @@ export default function Designer() {
   const sizes = ['S', 'M', 'L', 'XL', 'XXL']
   const [saving, setSaving] = useState(false)
   const [added, setAdded] = useState(false)
+  const [scale, setScale] = useState(1)
+  const [aiPrompt, setAiPrompt] = useState('')
+  const [aiTab, setAiTab] = useState('art')
+  const [aiBusy, setAiBusy] = useState(false)
+  const [aiImg, setAiImg] = useState('')
+  const [aiErr, setAiErr] = useState('')
+  const [fullPrompt, setFullPrompt] = useState('')
+  const [fullGenBusy, setFullGenBusy] = useState(false)
+  const [fullGenImages, setFullGenImages] = useState({ front: null, back: null, side: null })
+  const [fullGenErr, setFullGenErr] = useState('')
+  const [fullGenView, setFullGenView] = useState('front')
   const { add } = useCart()
   const fileRef = useRef(null)
   const renderCanvasRef = useRef(null)
@@ -63,7 +85,7 @@ export default function Designer() {
     if (!canvas) return
     canvas.clear()
     canvas.backgroundColor = '#F3F4F1'
-    const path = new fabric.Path(garmentPaths[v], {
+    const path = new fabric.Path(garmentRef.current.paths[v] || garmentRef.current.paths.front, {
       left: 0, top: 0, width: 500, height: 500,
       fill: color,
       stroke: 'rgba(16,24,40,.18)',
@@ -72,6 +94,8 @@ export default function Designer() {
       evented: false,
       objectCaching: false,
     })
+    const pb = path.getBoundingRect()
+    path.set({ left: 250 - pb.width / 2, top: 250 - pb.height / 2 })
     ;(path).name = templateId
     canvas.add(path)
     objects.forEach((o) => {
@@ -138,7 +162,19 @@ export default function Designer() {
     })
     canvasRef.current = canvas
     renderScene([], 'front', baseRef.current)
+
+    /* keep the fixed 500×500 canvas square and shrink it to fit narrow screens */
+    let ro
+    const measure = () => {
+      const w = containerRef.current?.getBoundingClientRect().width || 500
+      setScale(Math.min(1, w / 500))
+    }
+    ro = new ResizeObserver(measure)
+    if (containerRef.current) ro.observe(containerRef.current)
+    measure()
+
     return () => {
+      ro?.disconnect()
       canvas.dispose()
       canvasRef.current = null
       if (containerRef.current) containerRef.current.innerHTML = ''
@@ -172,13 +208,15 @@ export default function Designer() {
     [renderScene],
   )
 
-  /* ---- garment change ---- */
+  /* ---- garment/product change ---- */
   const changeGarment = useCallback(
     (g) => {
       garmentRef.current = g
       setGarment(g)
+      storeRef.current.price = g.price
+      renderScene(storeRef.current[viewRef.current], viewRef.current, baseRef.current)
     },
-    [],
+    [renderScene],
   )
 
   /* ---- text ops ---- */
@@ -256,6 +294,127 @@ export default function Designer() {
     canvas.renderAll()
   }, [])
 
+  /* ---- AI design generator (free Pollinations API — no key, no limits) ---- */
+  const generateAi = async () => {
+    const p = aiPrompt.trim()
+    if (!p) return toast.error('Describe the design you want, e.g. “golden lion mascot”.')
+    setAiBusy(true)
+    setAiErr('')
+    setAiImg('')
+    try {
+      const prompt = `${p}, flat vector sports team emblem logo, bold shapes, high contrast, solid white background, clean, professional`
+      const base = window.location.protocol === 'https:' ? 'https://image.pollinations.ai' : '/ai-img'
+      const url = `${base}/prompt/${encodeURIComponent(prompt)}?width=768&height=768&seed=${Math.floor(Math.random() * 999999)}&nologo=true`
+      const res = await fetch(url)
+      if (!res.ok) throw new Error(`AI service replied ${res.status}`)
+      const blob = await res.blob()
+      const src = await new Promise((resolve) => {
+        const r = new FileReader()
+        r.onload = () => resolve(r.result)
+        r.onerror = () => resolve('')
+        r.readAsDataURL(blob)
+      })
+      if (!src) throw new Error('Could not read the AI image.')
+      setAiImg(src)
+      toast.success('AI design ready — pick Front, Back or Both to apply it')
+    } catch (err) {
+      console.error(err)
+      setAiErr(err.message || 'Could not reach the free AI service. Please try again.')
+    } finally {
+      setAiBusy(false)
+    }
+  }
+
+  const applyAiTo = useCallback(
+    (target) => {
+      if (!aiImg) return
+      fabric.Image.fromURL(
+        aiImg,
+        (img) => {
+          const max = 190
+          const s = Math.min(max / img.width, 1)
+          img.set({ left: 150, top: 46, scaleX: s, scaleY: s, cornerSize: 12 })
+          if (target === viewRef.current) {
+            const canvas = canvasRef.current
+            canvas.add(img)
+            canvas.setActiveObject(img)
+            canvas.renderAll()
+            storeRef.current[target] = collectObjects()
+          } else {
+            storeRef.current[target] = [
+              ...storeRef.current[target],
+              { type: 'logo', src: aiImg, left: img.left, top: img.top, scaleX: s, scaleY: s, angle: 0, flipX: false, flipY: false },
+            ]
+          }
+          toast.success(`Added to ${target} side — switch views to see it`)
+        },
+        { crossOrigin: 'anonymous' },
+      )
+    },
+    [aiImg, collectObjects],
+  )
+
+  /* ---- Mode 2: AI Full Design Generator ---- */
+  const blobToDataURL = (blob) => new Promise((resolve) => {
+    const reader = new FileReader()
+    reader.onloadend = () => resolve(reader.result)
+    reader.readAsDataURL(blob)
+  })
+
+  const generateView = useCallback(async (prompt, view) => {
+    const angle = view === 'front' ? 'straight-on front view' : view === 'back' ? 'rear back view' : 'side profile 45-degree angle'
+    const p = `${prompt}, ${garmentRef.current.label.toLowerCase()} ${angle}, high quality product photo, white background, photorealistic, professional e-commerce, no watermark`
+    const base = window.location.protocol === 'https:' ? 'https://image.pollinations.ai' : '/ai-img'
+    let lastErr
+    for (let attempt = 0; attempt < 3; attempt++) {
+      try {
+        const res = await fetch(`${base}/prompt/${encodeURIComponent(p)}?width=768&height=768&seed=${Math.floor(Math.random() * 999999)}&nologo=true`)
+        if (!res.ok) throw new Error(`AI service replied ${res.status}`)
+        const blob = await res.blob()
+        return await blobToDataURL(blob)
+      } catch (err) {
+        lastErr = err
+        await new Promise((r) => setTimeout(r, 1200 * (attempt + 1)))
+      }
+    }
+    throw lastErr
+  }, [])
+
+  const generateFullDesign = useCallback(async (views) => {
+    if (!fullPrompt.trim()) return setFullGenErr('Describe the design you want')
+    setFullGenErr('')
+    setFullGenBusy(true)
+    for (const view of views) {
+      setFullGenImages((prev) => ({ ...prev, [view]: null }))
+      try {
+        const url = await generateView(fullPrompt.trim(), view)
+        setFullGenImages((prev) => ({ ...prev, [view]: url }))
+      } catch (err) {
+        setFullGenErr(`Failed to generate ${view} view: ${err.message}`)
+      }
+    }
+    setFullGenBusy(false)
+  }, [fullPrompt, generateView])
+
+  const addGeneratedToCart = useCallback(() => {
+    const preview = fullGenImages[fullGenView]
+    if (!preview) return
+    const sizeVal = size || 'L'
+    const design = {
+      kind: 'generated',
+      name: `${garment.label} · ${sizeVal}`,
+      price: garment.price,
+      qty: qty || 1,
+      size: sizeVal,
+      baseColor: baseRef.current,
+      selectedView: fullGenView,
+      views: fullGenImages,
+      preview,
+    }
+    add(undefined, { size: sizeVal, custom: design })
+    setAdded(true)
+  }, [fullGenImages, fullGenView, garment, size, qty, add])
+
   /* ---- save + add to cart ---- */
   const saveAndAdd = useCallback(() => {
     const canvas = canvasRef.current
@@ -295,6 +454,14 @@ export default function Designer() {
     storeRef.current.garment = garment
   }, [garment])
 
+  /* visually scale the fixed-size canvas to match the column width */
+  useEffect(() => {
+    const wrapper = canvasRef.current?.wrapperEl
+    if (!wrapper) return
+    wrapper.style.transformOrigin = 'top left'
+    wrapper.style.transform = `scale(${scale})`
+  }, [scale])
+
   return (
     <div className="grid gap-6 lg:grid-cols-[1fr_320px]">
       {/* Canvas + toolbar */}
@@ -331,7 +498,8 @@ export default function Designer() {
           <div className="relative overflow-hidden rounded-2xl bg-[#F3F4F1] ring-1 ring-ink/10">
             <div
               ref={containerRef}
-              className="mx-auto w-full max-w-[500px]"
+              className="mx-auto w-full max-w-[500px] overflow-hidden"
+              style={{ height: Math.round(500 * scale) }}
             />
             <p className="pointer-events-none absolute bottom-3 right-4 hidden items-center gap-1.5 rounded-full bg-white/80 px-3 py-1 text-[10px] font-semibold text-ink/50 backdrop-blur sm:flex">
               <FaArrowsAlt /> Drag to move · corners to resize/rotate
@@ -401,6 +569,137 @@ export default function Designer() {
 
       {/* Controls sidebar */}
       <div className="space-y-6">
+        <div className="card overflow-hidden p-5">
+          <h4 className="flex items-center gap-2 font-display text-sm font-bold text-brand-900"><FaRobot className="text-accent" /> AI Design Studio</h4>
+          <p className="mb-3 mt-1 text-[11px] leading-relaxed text-ink/50">
+            Pick a mode — design art to place on the {garment.label.toLowerCase()}, or generate the full product design in every view.
+          </p>
+
+          {/* mode tabs */}
+          <div className="mb-4 grid grid-cols-2 gap-1 rounded-xl bg-brand-50 p-1">
+            <button onClick={() => setAiTab('art')} className={`flex items-center justify-center gap-1.5 rounded-lg py-2 text-xs font-bold transition ${aiTab === 'art' ? 'bg-white text-brand-900 shadow-sm' : 'text-ink/50 hover:text-ink/70'}`}>
+              <FaMagic /> Design Art
+            </button>
+            <button onClick={() => setAiTab('full')} className={`flex items-center justify-center gap-1.5 rounded-lg py-2 text-xs font-bold transition ${aiTab === 'full' ? 'bg-white text-brand-900 shadow-sm' : 'text-ink/50 hover:text-ink/70'}`}>
+              <FaEye /> Full Design
+            </button>
+          </div>
+
+          {aiTab === 'art' && (
+            <>
+          <textarea
+            value={aiPrompt}
+            onChange={(e) => setAiPrompt(e.target.value)}
+            rows={2}
+            placeholder="e.g. golden lion mascot for a cricket team"
+            className="field resize-none text-sm"
+          />
+          <p className="mt-2 text-[10px] font-bold uppercase tracking-wide text-ink/40">Recommended prompts</p>
+          <div className="mt-1 flex flex-wrap gap-1.5">
+            {aiChips.map((c) => (
+              <button key={c} onClick={() => setAiPrompt(c)} className="rounded-full bg-brand-50 px-2.5 py-1 text-[11px] font-semibold text-brand-700 hover:bg-brand-100">
+                {c}
+              </button>
+            ))}
+          </div>
+          <button onClick={generateAi} disabled={aiBusy} className="btn-dark mt-3 w-full py-2.5 text-sm">
+            {aiBusy ? (
+              <><FaSpinner className="animate-spin" /> Generating… (10–40s)</>
+            ) : (
+              <><FaMagic /> Generate Design</>
+            )}
+          </button>
+          {aiBusy && <p className="mt-2 text-[11px] leading-relaxed text-ink/50">The free AI can take a moment — keep this page open, your design will appear here.</p>}
+          {aiErr && <p className="mt-2 text-[11px] font-semibold text-red-600">{aiErr}</p>}
+          {aiImg && !aiBusy && (
+            <div className="mt-4 rounded-xl border border-ink/10 bg-white p-2">
+              <img src={aiImg} alt="AI generated design" className="mx-auto aspect-square w-full max-w-[190px] rounded-lg object-cover ring-1 ring-ink/10" />
+              <p className="mt-1.5 text-center text-[10px] text-ink/40">Then drag/resize it on the shirt</p>
+              <div className="mt-2 grid grid-cols-3 gap-1.5">
+                <button onClick={() => applyAiTo('front')} className="rounded-lg bg-brand-700 py-1.5 text-xs font-bold text-white hover:bg-brand-800">Front</button>
+                <button onClick={() => applyAiTo('back')} className="rounded-lg bg-brand-700 py-1.5 text-xs font-bold text-white hover:bg-brand-800">Back</button>
+                <button onClick={() => { applyAiTo('front'); applyAiTo('back') }} className="rounded-lg bg-accent py-1.5 text-xs font-bold text-white hover:bg-accent-600">Both</button>
+              </div>
+            </div>
+          )}
+            </>
+          )}
+
+          {aiTab === 'full' && (
+            <>
+          <p className="mb-3 text-[11px] leading-relaxed text-ink/50">
+            Describe the whole {garment.label.toLowerCase()} and AI generates real product photos — front, back &amp; side — ready to order.
+          </p>
+          <textarea
+            value={fullPrompt}
+            onChange={(e) => setFullPrompt(e.target.value)}
+            rows={2}
+            placeholder={`e.g. navy ${garment.label.toLowerCase()} with a golden eagle on the chest`}
+            className="field resize-none text-sm"
+          />
+          <p className="mt-2 text-[10px] font-bold uppercase tracking-wide text-ink/40">Recommended prompts</p>
+          <div className="mt-1 flex flex-wrap gap-1.5">
+            {fullIdeas.map((c) => (
+              <button key={c.label} onClick={() => setFullPrompt(c.prompt)} className="rounded-full bg-brand-50 px-2.5 py-1 text-[11px] font-semibold text-brand-700 hover:bg-brand-100">
+                {c.label}
+              </button>
+            ))}
+          </div>
+          <div className="mt-3 grid grid-cols-3 gap-1.5">
+            <button onClick={() => generateFullDesign(['front'])} disabled={fullGenBusy} className="rounded-lg border border-brand-700 py-2 text-xs font-bold text-brand-700 hover:bg-brand-50">Front</button>
+            <button onClick={() => generateFullDesign(['back'])} disabled={fullGenBusy} className="rounded-lg border border-brand-700 py-2 text-xs font-bold text-brand-700 hover:bg-brand-50">Back</button>
+            <button onClick={() => generateFullDesign(['side'])} disabled={fullGenBusy} className="rounded-lg border border-brand-700 py-2 text-xs font-bold text-brand-700 hover:bg-brand-50">Side</button>
+          </div>
+          <button onClick={() => generateFullDesign(['front', 'back', 'side'])} disabled={fullGenBusy || !fullPrompt.trim()} className="btn-dark mt-2 w-full py-2.5 text-sm">
+            {fullGenBusy ? <><FaSpinner className="animate-spin" /> Generating views…</> : <><FaRobot /> Generate Full Design (All Views)</>}
+          </button>
+          {fullGenBusy && <p className="mt-2 text-[11px] leading-relaxed text-ink/50">Each view takes ~5–10s on the free AI — images appear below as they finish.</p>}
+          {fullGenErr && <p className="mt-2 text-[11px] font-semibold text-red-600">{fullGenErr}</p>}
+
+          {(fullGenImages.front || fullGenImages.back || fullGenImages.side) && (
+            <div className="mt-4">
+              <p className="mb-2 text-[11px] font-bold uppercase tracking-wide text-ink/50">All generated views</p>
+              <div className="grid grid-cols-3 gap-1.5">
+                {['front', 'back', 'side'].map((view) => (
+                  <button
+                    key={view}
+                    onClick={() => fullGenImages[view] && setFullGenView(view)}
+                    className={`overflow-hidden rounded-lg ring-2 transition ${view === fullGenView && fullGenImages[view] ? 'ring-accent' : 'ring-transparent'} ${fullGenImages[view] ? 'cursor-pointer' : 'cursor-default'}`}
+                  >
+                    <div className="flex aspect-square items-center justify-center bg-[#F3F4F1]">
+                      {fullGenImages[view] ? (
+                        <img src={fullGenImages[view]} alt={`${view} view of ${garment.label}`} className="h-full w-full object-contain" />
+                      ) : (
+                        <FaSpinner className="animate-spin text-ink/30" />
+                      )}
+                    </div>
+                    <span className="block py-1 text-center text-[9px] font-bold uppercase tracking-wide text-ink/60 first-letter:capitalize">{view}</span>
+                  </button>
+                ))}
+              </div>
+              {fullGenImages[fullGenView] && (
+                <div className="mt-3 rounded-xl border border-ink/10 bg-white p-2">
+                  <img src={fullGenImages[fullGenView]} alt={`Selected ${fullGenView} view design`} className="mx-auto aspect-square w-full max-w-[230px] rounded-lg object-cover ring-1 ring-ink/10" />
+                  <p className="mt-1.5 text-center text-[10px] text-ink/40">Preview: {fullGenView} view</p>
+                  <div className="mt-2 grid grid-cols-3 gap-1.5">
+                    {sizes.map((s) => (
+                      <button key={s} onClick={() => setSize(s)} className={`rounded-lg border py-1.5 text-xs font-bold ${size === s ? 'border-brand-700 bg-brand-700 text-white' : 'border-ink/15 text-ink/70'}`}>
+                        {s}
+                      </button>
+                    ))}
+                  </div>
+                  <button onClick={addGeneratedToCart} className="btn-primary mt-2 w-full py-2.5 text-sm">
+                    Order This Full Design — {inr(garment.price * (qty || 1))}
+                  </button>
+                  {added && <p className="mt-2 text-center text-xs font-semibold text-emerald-600">Added to cart ✓</p>}
+                </div>
+              )}
+            </div>
+          )}
+            </>
+          )}
+        </div>
+
         <div className="card p-5">
           <h4 className="mb-3 flex items-center gap-2 font-display text-sm font-bold text-brand-900"><FaLayerGroup /> Garment Type</h4>
           <div className="space-y-1.5">

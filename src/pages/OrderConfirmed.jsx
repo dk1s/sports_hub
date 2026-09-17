@@ -72,7 +72,7 @@ export default function OrderConfirmed() {
     )
   }
 
-  const waLink = `https://wa.me/${settings?.whatsapp || '919000000000'}?text=Hi, I just placed order ${order.no} (${inr(order.totals.total)}). Please confirm it.`
+  const waLink = `https://wa.me/${settings?.whatsapp || '918210293271'}?text=Hi, I just placed order ${order.no} (${inr(order.totals.total)}). Please confirm it.`
 
   return (
     <div className="container-x max-w-3xl py-12">
